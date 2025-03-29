@@ -4,31 +4,43 @@ __version__ = "0.1"
 
 
 import functools
-from typing import Callable, Iterable, ParamSpec, TypeVar
+from typing import Callable, ParamSpec, TypeVar
 
 
-P = ParamSpec("P")
-R = TypeVar("R")
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
 
 
-class UncaughtException(BaseException): pass # FIXME
+# Get a reference to the built-in function type.
+# fmt: off
+def _a_function(): pass
+_function = type(_a_function)
+# fmt: on
 
 
-def raises(exceptions: Iterable[type[Exception]] = ()) -> Callable[[Callable[P, R]], Callable[P, R]]:
-    exceptions = tuple(exceptions)
+class UndeclaredException(BaseException):
+    def __init__(self) -> None:
+        super().__init__("undeclared exception raised")
+
+
+def raises(
+    *exceptions: type[Exception],
+) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
+    if exceptions and isinstance(exceptions[0], _function):
+        raise TypeError("parentheses are required: @raises()")
     for exception in exceptions:
-        if exception is Exception or not issubclass(exception, Exception):
-            raise TypeError("raises only allows Exception subclasses") # FIXME
+        if exception is Exception or not issubclass(exception, Exception):  # type: ignore
+            raise TypeError("all exceptions must be Exception subclasses")
 
-    def raises_decorator(function: Callable[P, R]) -> Callable[P, R]:
+    def raises_decorator(function: Callable[_P, _R]) -> Callable[_P, _R]:
         @functools.wraps(function)
-        def raises_function(*args:P.args, **kwargs:P.kwargs) -> R:
+        def raises_function(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             try:
                 return function(*args, **kwargs)
             except exceptions:
                 raise
-            except Exception as e:
-                raise UncaughtException(e)
+            except Exception as exc:
+                raise UndeclaredException() from exc
 
         return raises_function
 

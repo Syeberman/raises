@@ -15,3 +15,4 @@ Home = "https://github.com/Syeberman/raises"
 [tool.pytest.ini_options]
 pythonpath = "."
 testpaths = ["tests"]
+addopts = "--cov-branch"
