@@ -1,0 +1,17 @@
+[build-system]
+requires = ["flit_core >=3.11,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "raises"
+authors = [{name = "Sye van der Veen", email = "syeberman@gmail.com"}]
+readme = "README.md"
+dynamic = ["version", "description"]
+classifiers = ["License :: Public Domain"]
+
+[project.urls]
+Home = "https://github.com/Syeberman/raises"
+
+[tool.pytest.ini_options]
+pythonpath = "."
+testpaths = ["tests"]
