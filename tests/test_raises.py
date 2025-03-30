@@ -1,9 +1,6 @@
 import pytest
+
 from raises import UndeclaredException, raises
-
-
-# FIXME Assert we are wrapping correctly.
-#
 
 
 def test_basic():
@@ -88,3 +85,19 @@ def test_only_Exception_subclasses():
         raises(UndeclaredException)  # type: ignore
     with pytest.raises(TypeError, match=re_match):
         raises(Exception)
+
+
+def test_wraps():
+    @raises(TypeError)
+    def original_function[T](original_parameter: T) -> T:
+        "Original docstring."
+        return original_parameter
+
+    T = original_function.__wrapped__.__annotations__["return"]  # type: ignore
+
+    assert original_function.__module__ == "test_raises"
+    assert original_function.__name__ == "original_function"
+    assert original_function.__qualname__ == "test_wraps.<locals>.original_function"
+    assert original_function.__annotations__ == {"original_parameter": T, "return": T}
+    assert original_function.__type_params__ == (T,)
+    assert original_function.__doc__ == "Original docstring."
