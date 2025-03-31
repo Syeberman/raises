@@ -4,31 +4,33 @@ from raises import UndeclaredException, raises
 
 
 def test_basic():
-    """raises allows the declared exceptions to pass through, converting other exceptions to
+    """Allows the declared exceptions to pass through; other exceptions are re-raised as
     UndeclaredException."""
 
     @raises(TypeError)
-    def raise_expected():
+    def raise_declared():
         raise TypeError
 
-    pytest.raises(TypeError, raise_expected)
+    pytest.raises(TypeError, raise_declared)
 
     @raises(TypeError)
-    def raise_unexpected():
+    def raise_undeclared():
         raise ValueError
 
-    excinfo = pytest.raises(UndeclaredException, raise_unexpected)
+    excinfo = pytest.raises(UndeclaredException, raise_undeclared)
     assert excinfo.match("^undeclared exception raised$")
     assert type(excinfo.value.__cause__) is ValueError
 
     @raises(TypeError)
-    def nothing_raised():
+    def raise_nothing():
         return "success"
 
-    assert nothing_raised() == "success"
+    assert raise_nothing() == "success"
 
 
 def test_multiple_exceptions():
+    """Multiple exceptions can be declared."""
+
     def multi_exceptions(exc: type[BaseException]):
         @raises(TypeError, ValueError)
         def multi_exceptions_inner():
@@ -45,6 +47,8 @@ def test_multiple_exceptions():
 
 
 def test_no_exceptions():
+    """If no exceptions are declared, all exceptions are re-raised as UndeclaredException."""
+
     def exceptions_empty(exc: type[BaseException]):
         @raises()
         def exceptions_empty_inner():
@@ -69,6 +73,9 @@ def test_no_exceptions():
 
 
 def test_raise_non_Exception():
+    """Only Exception and its subclasses are re-raised as UndeclaredException; all other exceptions
+    pass through."""
+
     def non_Exception(exc: type[BaseException]):
         @raises(TypeError)
         def non_Exception_inner():
@@ -87,6 +94,8 @@ def test_raise_non_Exception():
 
 
 def test_parentheses_required():
+    """Give a helpful error if the parentheses are missing."""
+
     re_match = r"^parentheses are required: @raises\(\)$"
     with pytest.raises(TypeError, match=re_match):
         @raises  # type: ignore # fmt: skip
@@ -95,18 +104,23 @@ def test_parentheses_required():
 
 
 def test_only_Exception_subclasses():
+    """Only proper subclasses of Exception can be declared; Exception and other exceptions are not
+    allowed."""
+
     re_match = r"^all exceptions must be Exception subclasses$"
     with pytest.raises(TypeError, match=re_match):
         raises(BaseException)  # type: ignore
     with pytest.raises(TypeError, match=re_match):
-        raises(KeyboardInterrupt)  # type: ignore
+        raises(ValueError, KeyboardInterrupt)  # type: ignore
     with pytest.raises(TypeError, match=re_match):
-        raises(UndeclaredException)  # type: ignore
+        raises(UndeclaredException, ValueError)  # type: ignore
     with pytest.raises(TypeError, match=re_match):
         raises(Exception)
 
 
 def test_wraps():
+    """Ensures functools.wraps is applied properly."""
+
     @raises(TypeError)
     def original_function[T](original_parameter: T) -> T:
         "Original docstring."
