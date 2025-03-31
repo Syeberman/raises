@@ -4,6 +4,9 @@ from raises import UndeclaredException, raises
 
 
 def test_basic():
+    """raises allows the declared exceptions to pass through, converting other exceptions to
+    UndeclaredException."""
+
     @raises(TypeError)
     def raise_expected():
         raise TypeError
@@ -25,25 +28,23 @@ def test_basic():
     assert nothing_raised() == "success"
 
 
-def test_raise_non_Exception():
-    def non_Exception(exc: type[BaseException]):
-        @raises(TypeError)
-        def non_Exception_inner():
+def test_multiple_exceptions():
+    def multi_exceptions(exc: type[BaseException]):
+        @raises(TypeError, ValueError)
+        def multi_exceptions_inner():
             raise exc
 
-        return non_Exception_inner
+        return multi_exceptions_inner
 
-    # BaseException matches everything, so be specific.
-    excinfo = pytest.raises(BaseException, non_Exception(BaseException))
-    assert excinfo.type is BaseException
+    pytest.raises(TypeError, multi_exceptions(TypeError))
 
-    pytest.raises(KeyboardInterrupt, non_Exception(KeyboardInterrupt))
+    pytest.raises(ValueError, multi_exceptions(ValueError))
 
-    excinfo = pytest.raises(UndeclaredException, non_Exception(UndeclaredException))
-    assert excinfo.value.__cause__ is None
+    excinfo = pytest.raises(UndeclaredException, multi_exceptions(LookupError))
+    assert type(excinfo.value.__cause__) is LookupError
 
 
-def test_exceptions_empty():
+def test_no_exceptions():
     def exceptions_empty(exc: type[BaseException]):
         @raises()
         def exceptions_empty_inner():
@@ -65,6 +66,24 @@ def test_exceptions_empty():
 
     excinfo = pytest.raises(UndeclaredException, exceptions_empty(ValueError))
     assert type(excinfo.value.__cause__) is ValueError
+
+
+def test_raise_non_Exception():
+    def non_Exception(exc: type[BaseException]):
+        @raises(TypeError)
+        def non_Exception_inner():
+            raise exc
+
+        return non_Exception_inner
+
+    # BaseException matches everything, so be specific.
+    excinfo = pytest.raises(BaseException, non_Exception(BaseException))
+    assert excinfo.type is BaseException
+
+    pytest.raises(KeyboardInterrupt, non_Exception(KeyboardInterrupt))
+
+    excinfo = pytest.raises(UndeclaredException, non_Exception(UndeclaredException))
+    assert excinfo.value.__cause__ is None
 
 
 def test_parentheses_required():
@@ -91,7 +110,7 @@ def test_wraps():
     @raises(TypeError)
     def original_function[T](original_parameter: T) -> T:
         "Original docstring."
-        return original_parameter
+        return original_parameter  # pragma: no cover
 
     T = original_function.__wrapped__.__annotations__["return"]  # type: ignore
 

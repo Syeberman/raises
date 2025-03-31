@@ -13,7 +13,7 @@ _R = TypeVar("_R")
 
 # Get a reference to the built-in function type.
 # fmt: off
-def _a_function(): pass
+def _a_function(): pass   # pragma: no cover
 _function = type(_a_function)
 # fmt: on
 
