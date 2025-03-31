@@ -4,7 +4,7 @@ from raises import UndeclaredException, raises
 
 
 def test_basic():
-    """Allows the declared exceptions to pass through; other exceptions are re-raised as
+    """Allows the declared exceptions to pass through; other non-fatal exceptions are re-raised as
     UndeclaredException."""
 
     @raises(TypeError)
@@ -47,7 +47,8 @@ def test_multiple_exceptions():
 
 
 def test_no_exceptions():
-    """If no exceptions are declared, all exceptions are re-raised as UndeclaredException."""
+    """If no exceptions are declared, all non-fatal exceptions are re-raised as
+    UndeclaredException."""
 
     def exceptions_empty(exc: type[BaseException]):
         @raises()
@@ -72,9 +73,8 @@ def test_no_exceptions():
     assert type(excinfo.value.__cause__) is ValueError
 
 
-def test_raise_non_Exception():
-    """Only Exception and its subclasses are re-raised as UndeclaredException; all other exceptions
-    pass through."""
+def test_raise_fatal_exception():
+    """All fatal exceptions pass through."""
 
     def non_Exception(exc: type[BaseException]):
         @raises(TypeError)
@@ -93,6 +93,9 @@ def test_raise_non_Exception():
     assert excinfo.value.__cause__ is None
 
 
+# FIXME Wrap a method.
+
+
 def test_parentheses_required():
     """Give a helpful error if the parentheses are missing."""
 
@@ -104,8 +107,8 @@ def test_parentheses_required():
 
 
 def test_only_Exception_subclasses():
-    """Only proper subclasses of Exception can be declared; Exception and other exceptions are not
-    allowed."""
+    """Only proper subclasses of Exception can be declared; Exception, and the fatal exceptions, are
+    not allowed."""
 
     re_match = r"^all exceptions must be Exception subclasses$"
     with pytest.raises(TypeError, match=re_match):

@@ -6,7 +6,6 @@ __version__ = "0.1"
 import functools
 from typing import Callable, ParamSpec, TypeVar
 
-
 _P = ParamSpec("_P")
 _R = TypeVar("_R")
 
@@ -19,6 +18,9 @@ _function = type(_a_function)
 
 
 class UndeclaredException(BaseException):
+    """Fatal exception indicating that a function decorated with `@raises()` raised an unexpected
+    exception. The original exception is available in __cause__."""
+
     def __init__(self) -> None:
         super().__init__("undeclared exception raised")
 
@@ -26,6 +28,31 @@ class UndeclaredException(BaseException):
 def raises(
     *exceptions: type[Exception],
 ) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
+    """`raises` is a function decorator that ensures only the declared non-fatal exceptions are
+    raised. Any unexpected non-fatal exception is re-raised as a fatal exception.
+
+    >>> @raises(TypeError)
+    ... def function(key):
+    ...     return int({'key': None}[key])
+
+    >>> function('key')
+    Traceback (most recent call last):
+    ...
+    TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'
+
+    >>> function('not_key')
+    Traceback (most recent call last):
+    ...
+    raises.UndeclaredException: undeclared exception raised
+
+    "Non-fatal exceptions" refers to `Exception` and its subclasses. Non-fatal exceptions are
+    possibly caught and handled in the normal operation of the program, whereas fatal exceptions
+    should usually terminate the program. See [PEP 760](https://peps.python.org/pep-0760/) for more
+    details on this distinction.
+
+    Multiple exceptions can be declared. Declared exceptions must be subclasses of Exception, but
+    not Exception itself. Only undeclared non-fatal exceptions are re-raised as UndeclaredException.
+    """
     if exceptions and isinstance(exceptions[0], _function):
         raise TypeError("parentheses are required: @raises()")
     for exception in exceptions:
