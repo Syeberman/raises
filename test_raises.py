@@ -97,7 +97,21 @@ def test_raise_fatal_exception():
     assert excinfo.value.__cause__ is None
 
 
-# FIXME Wrap a method.
+def test_method():
+    """Can be used on class methods."""
+
+    def method_exceptions(exc: type[BaseException]):
+        class MethodExceptionsClass:
+            @raises(TypeError)
+            def method_exceptions_inner(self):
+                raise exc
+
+        return MethodExceptionsClass().method_exceptions_inner
+
+    pytest.raises(TypeError, method_exceptions(TypeError))
+
+    excinfo = pytest.raises(UndeclaredException, method_exceptions(ValueError))
+    assert type(excinfo.value.__cause__) is ValueError
 
 
 def test_parentheses_required():
@@ -108,6 +122,12 @@ def test_parentheses_required():
         @raises  # type: ignore # fmt: skip
         def no_parentheses():  # type: ignore
             pass  # pragma: no cover
+
+    with pytest.raises(TypeError, match=re_match):
+        class NoParenthesesClass: # type: ignore # fmt: skip
+            @raises  # type: ignore # fmt: skip
+            def no_parentheses_method():  # type: ignore
+                pass  # pragma: no cover
 
 
 def test_only_Exception_subclasses():

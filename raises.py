@@ -31,19 +31,19 @@ def raises(
     """`raises` is a function decorator that ensures only the declared non-fatal exceptions are
     raised. Any unexpected non-fatal exception is re-raised as a fatal exception.
 
-    >>> @raises(TypeError)
-    ... def my_function(key):
-    ...     return int({'key': None}[key])  # FIXME Better example
+    >>> @raises(ZeroDivisionError)
+    ... def divide(a, b):
+    ...     return a / b
 
-    >>> my_function('key')
+    >>> divide(1, 0)
     Traceback (most recent call last):
     ...
-    TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'
+    ZeroDivisionError: division by zero
 
-    >>> my_function('not_key')
+    >>> divide("one", 0)
     Traceback (most recent call last):
     ...
-    raises.UndeclaredException: unexpected KeyError from my_function
+    raises.UndeclaredException: unexpected TypeError from divide
 
     "Non-fatal exceptions" refers to `Exception` and its subclasses. Non-fatal exceptions are
     possibly caught and handled in the normal operation of the program, whereas fatal exceptions
