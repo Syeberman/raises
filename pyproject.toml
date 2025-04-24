@@ -5,6 +5,7 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "raises"
 authors = [{name = "Sye van der Veen", email = "syeberman@gmail.com"}]
+requires-python = ">= 3.10"
 readme = "README.md"
 dynamic = ["version", "description"]
 classifiers = ["License :: Public Domain"]

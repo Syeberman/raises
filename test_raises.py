@@ -125,15 +125,15 @@ def test_wraps():
     """Ensures functools.wraps is applied properly."""
 
     @raises(TypeError)
-    def original_function[T](original_parameter: T) -> T:
+    def original_function(original_parameter: int) -> int:
         "Original docstring."
         return original_parameter  # pragma: no cover
-
-    T = original_function.__wrapped__.__annotations__["return"]  # type: ignore
 
     assert original_function.__module__ == "test_raises"
     assert original_function.__name__ == "original_function"
     assert original_function.__qualname__ == "test_wraps.<locals>.original_function"
-    assert original_function.__annotations__ == {"original_parameter": T, "return": T}
-    assert original_function.__type_params__ == (T,)
+    assert original_function.__annotations__ == {
+        "original_parameter": int,
+        "return": int,
+    }
     assert original_function.__doc__ == "Original docstring."
