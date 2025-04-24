@@ -18,7 +18,7 @@ def test_basic():
         raise ValueError
 
     excinfo = pytest.raises(UndeclaredException, raise_undeclared)
-    assert excinfo.match("^undeclared exception raised$")
+    assert excinfo.match("^unexpected ValueError from raise_undeclared$")
     assert type(excinfo.value.__cause__) is ValueError
 
     @raises(TypeError)
@@ -50,20 +50,22 @@ def test_no_exceptions():
     """If no exceptions are declared, all non-fatal exceptions are re-raised as
     UndeclaredException."""
 
-    def exceptions_empty(exc: type[BaseException]):
+    def exceptions_empty(exc: type[BaseException] | BaseException):
         @raises()
         def exceptions_empty_inner():
             raise exc
 
         return exceptions_empty_inner
 
-    # BaseException matches everything, so be specific.
+    # pytest.raises(BaseException) will catch everything, so check the type.
     excinfo = pytest.raises(BaseException, exceptions_empty(BaseException))
     assert excinfo.type is BaseException
 
     pytest.raises(KeyboardInterrupt, exceptions_empty(KeyboardInterrupt))
 
-    excinfo = pytest.raises(UndeclaredException, exceptions_empty(UndeclaredException))
+    excinfo = pytest.raises(
+        UndeclaredException, exceptions_empty(UndeclaredException("", ""))
+    )
     assert excinfo.value.__cause__ is None
 
     excinfo = pytest.raises(UndeclaredException, exceptions_empty(Exception))
@@ -76,20 +78,22 @@ def test_no_exceptions():
 def test_raise_fatal_exception():
     """All fatal exceptions pass through."""
 
-    def non_Exception(exc: type[BaseException]):
+    def non_Exception(exc: type[BaseException] | BaseException):
         @raises(TypeError)
         def non_Exception_inner():
             raise exc
 
         return non_Exception_inner
 
-    # BaseException matches everything, so be specific.
+    # pytest.raises(BaseException) will catch everything, so check the type.
     excinfo = pytest.raises(BaseException, non_Exception(BaseException))
     assert excinfo.type is BaseException
 
     pytest.raises(KeyboardInterrupt, non_Exception(KeyboardInterrupt))
 
-    excinfo = pytest.raises(UndeclaredException, non_Exception(UndeclaredException))
+    excinfo = pytest.raises(
+        UndeclaredException, non_Exception(UndeclaredException("", ""))
+    )
     assert excinfo.value.__cause__ is None
 
 

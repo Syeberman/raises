@@ -1,4 +1,4 @@
-"""raises - Declared, unchecked exceptions"""
+"""raises - No unexpected exceptions"""
 
 __version__ = "0.1"
 
@@ -21,8 +21,8 @@ class UndeclaredException(BaseException):
     """Fatal exception indicating that a function decorated with `@raises()` raised an unexpected
     exception. The original exception is available in __cause__."""
 
-    def __init__(self) -> None:
-        super().__init__("undeclared exception raised")
+    def __init__(self, function_name: str, exception_name: str, /) -> None:
+        super().__init__(f"unexpected {exception_name} from {function_name}")
 
 
 def raises(
@@ -32,18 +32,18 @@ def raises(
     raised. Any unexpected non-fatal exception is re-raised as a fatal exception.
 
     >>> @raises(TypeError)
-    ... def function(key):
-    ...     return int({'key': None}[key])
+    ... def my_function(key):
+    ...     return int({'key': None}[key])  # FIXME Better example
 
-    >>> function('key')
+    >>> my_function('key')
     Traceback (most recent call last):
     ...
     TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'
 
-    >>> function('not_key')
+    >>> my_function('not_key')
     Traceback (most recent call last):
     ...
-    raises.UndeclaredException: undeclared exception raised
+    raises.UndeclaredException: unexpected KeyError from my_function
 
     "Non-fatal exceptions" refers to `Exception` and its subclasses. Non-fatal exceptions are
     possibly caught and handled in the normal operation of the program, whereas fatal exceptions
@@ -67,7 +67,9 @@ def raises(
             except exceptions:
                 raise
             except Exception as exc:
-                raise UndeclaredException() from exc
+                raise UndeclaredException(
+                    function.__name__, type(exc).__name__
+                ) from exc
 
         return raises_function
 
